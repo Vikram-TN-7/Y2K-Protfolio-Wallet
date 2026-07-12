@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://y2kportfoliowallet.netlify.app/sitemap.xml
