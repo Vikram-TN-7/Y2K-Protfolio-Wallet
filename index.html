@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
+  <title>Y2K Portfolio Wallet · Vikram</title>
+  
+  <!-- SEO Meta -->
+  <meta name="description" content="Y2K Portfolio Wallet – store resumes, projects, apps, videos & links. Cloud-synced, dark glassy UI. Made by Vikram." />
+  <meta name="keywords" content="portfolio, resume, Y2K, wallet, projects, links, Vikram, dark, glass, customizable, supabase" />
+  <meta name="author" content="Vikram" />
+  <link rel="canonical" href="https://y2k-portfolio-wallet.netlify.app/" />
+  <meta property="og:title" content="Y2K Portfolio Wallet" />
+  <meta property="og:description" content="Cloud-synced portfolio hub – store resumes, projects, links & more." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://y2k-portfolio-wallet.netlify.app/" />
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <style>
+    /* ============================================================
+       RESET & BASE – Dark Glassy Professional
+       ============================================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #0b0b14;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      color: #e8ecf0;
+    }
+    .wallet-card {
+      max-width: 1100px;
+      width: 100%;
+      background: rgba(20, 22, 32, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 2.8rem;
+      padding: 2.2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: box-shadow 0.2s ease;
+    }
+    .wallet-card:hover {
+      box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .logo h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f0f3f8;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .logo h1 .accent {
+      color: #6a8cff;
+      font-weight: 300;
+    }
+    .logo h1 .click-target {
+      cursor: pointer;
+      padding: 0 4px;
+      border-radius: 4px;
+      background: linear-gradient(145deg, #f0f3f8, #aab4d0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-weight: 700;
+      transition: 0.15s;
+    }
+    .logo h1 .click-target:hover {
+      background: linear-gradient(145deg, #6a8cff, #b388ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      transform: scale(1.02);
+    }
+    .logo h1 .dot {
+      color: rgba(255,255,255,0.3);
+      font-weight: 300;
+    }
+    .logo h1 .wallet-text {
+      color: rgba(255,255,255,0.6);
+      font-weight: 400;
+    }
+    .logo small {
+      display: block;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+    .stats {
+      color: rgba(255,255,255,0.3);
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.04);
+      padding: 0.4rem 1.2rem;
+      border-radius: 60px;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .stats strong {
+      color: rgba(255,255,255,0.7);
+    }
+    .edit-indicator {
+      font-size: 0.65rem;
+      color: rgba(106,255,140,0.6);
+      background: rgba(106,255,140,0.08);
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      border: 1px solid rgba(106,255,140,0.1);
+      margin-left: 0.5rem;
+      animation: pulseGlow 2s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    .sync-status {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.3);
+      margin-left: 0.8rem;
+      background: rgba(255,255,255,0.04);
+      padding: 0.15rem 0.6rem;
+      border-radius: 40px;
+    }
+    .sync-status.synced {
+      color: rgba(106,255,140,0.5);
+      border: 1px solid rgba(106,255,140,0.08);
+    }
+    .sync-status.saving {
+      color: rgba(255,200,100,0.5);
+      border: 1px solid rgba(255,200,100,0.08);
+    }
+
+    /* ============================================================
+       PORTFOLIO GRID
+       ============================================================ */
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 1.5rem 0 1.8rem;
+    }
+    .card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-radius: 1.8rem;
+      padding: 1.4rem 1.2rem 1.2rem;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      color: #e8ecf0;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+    }
+    .card:nth-child(6n+1) { border-left: 4px solid #6a8cff; }
+    .card:nth-child(6n+2) { border-left: 4px solid #f7a64a; }
+    .card:nth-child(6n+3) { border-left: 4px solid #4dd0a0; }
+    .card:nth-child(6n+4) { border-left: 4px solid #b388ff; }
+    .card:nth-child(6n+5) { border-left: 4px solid #ff7a6b; }
+    .card:nth-child(6n+6) { border-left: 4px solid #4dd0e1; }
+
+    .card-icon { font-size: 1.8rem; margin-bottom: 0.3rem; opacity: 0.9; }
+    .card-title { font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; color: #f0f3f8; }
+    .card-desc { font-size: 0.8rem; color: rgba(255,255,255,0.55); margin-bottom: 0.6rem; line-height: 1.4; flex: 1; }
+    .card-tag {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 0.2rem 0.7rem;
+      border-radius: 40px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      align-self: flex-start;
+    }
+    .card-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 8px;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      padding-top: 8px;
+    }
+    .card-actions button {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.6);
+      padding: 0.2rem 0.7rem;
+      border-radius: 40px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: 0.15s;
+      backdrop-filter: blur(2px);
+    }
+    .card-actions button:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border-color: rgba(255,255,255,0.15);
+    }
+    .card-actions .remove-btn:hover {
+      background: rgba(255,80,80,0.2);
+      border-color: rgba(255,80,80,0.3);
+      color: #ff7a6b;
+    }
+    .card-link {
+      color: #6a8cff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: 0.15s;
+      border-bottom: 1px solid transparent;
+      width: fit-content;
+      margin-top: 4px;
+    }
+    .card-link:hover {
+      color: #a8c0ff;
+      border-bottom-color: #6a8cff;
+    }
+
+    /* Add Card */
+    .add-card {
+      background: rgba(255,255,255,0.02);
+      border: 2px dashed rgba(255,255,255,0.08);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      min-height: 180px;
+      cursor: default;
+      transition: 0.2s;
+    }
+    .add-card:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.04);
+    }
+    .add-card .card-icon { font-size: 2.4rem; opacity: 0.3; }
+    .add-card .card-title { color: rgba(255,255,255,0.3); font-weight: 400; }
+    .add-card .card-desc { color: rgba(255,255,255,0.2); }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .footer {
+      margin-top: 1.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 1.2rem;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.8rem;
+    }
+    .footer strong {
+      color: rgba(255,255,255,0.7);
+      font-weight: 600;
+    }
+    .footer a {
+      color: rgba(255,255,255,0.3);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: 0.15s;
+      margin-left: 0.5rem;
+    }
+    .footer a:hover {
+      color: #fff;
+      border-bottom-color: #6a8cff;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 640px) {
+      .wallet-card { padding: 1.5rem; border-radius: 2rem; }
+      .logo h1 { font-size: 1.6rem; }
+      .portfolio-grid { gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+      .card { padding: 1rem; }
+    }
+    @media (max-width: 420px) {
+      .header { flex-direction: column; align-items: stretch; gap: 0.8rem; }
+    }
+
+    /* ============================================================
+       ANIMATIONS
+       ============================================================ */
+    .card {
+      animation: fadeUp 0.4s ease both;
+    }
+    .card:nth-child(1) { animation-delay: 0.02s; }
+    .card:nth-child(2) { animation-delay: 0.04s; }
+    .card:nth-child(3) { animation-delay: 0.06s; }
+    .card:nth-child(4) { animation-delay: 0.08s; }
+    .card:nth-child(5) { animation-delay: 0.10s; }
+    .card:nth-child(6) { animation-delay: 0.12s; }
+    .card:nth-child(7) { animation-delay: 0.14s; }
+    @keyframes fadeUp {
+      0% { opacity: 0; transform: translateY(8px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       PASSWORD MODAL
+       ============================================================ */
+    .password-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .password-modal {
+      background: rgba(20,22,32,0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 2rem;
+      padding: 2.5rem 2.8rem;
+      max-width: 420px;
+      width: 90%;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+      text-align: center;
+    }
+    .password-modal h2 {
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #f0f3f8;
+    }
+    .password-modal p {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.85rem;
+      margin-bottom: 1.8rem;
+    }
+    .password-modal input {
+      width: 100%;
+      padding: 0.8rem 1.2rem;
+      border-radius: 60px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #e8ecf0;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.15s;
+      margin-bottom: 1rem;
+    }
+    .password-modal input:focus {
+      border-color: #6a8cff;
+      box-shadow: 0 0 0 3px rgba(106,140,255,0.15);
+      background: rgba(255,255,255,0.06);
+    }
+    .password-modal .error {
+      color: #ff7a6b;
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+      min-height: 1.2rem;
+    }
+    .password-modal .btn-group {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+    }
+    .password-modal .btn-group button {
+      padding: 0.6rem 2rem;
+      border-radius: 60px;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: 0.15s;
+      font-size: 0.85rem;
+      backdrop-filter: blur(4px);
+    }
+    .password-modal .btn-group button:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border-color: rgba(255,255,255,0.15);
+    }
+    .password-modal .btn-group .btn-primary {
+      background: rgba(106,140,255,0.2);
+      border-color: rgba(106,140,255,0.3);
+      color: #c8d6ff;
+    }
+    .password-modal .btn-group .btn-primary:hover {
+      background: rgba(106,140,255,0.3);
+      border-color: #6a8cff;
+    }
+
+    /* ============================================================
+       TOAST NOTIFICATIONS
+       ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30,22,32,0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0.8rem 2rem;
+      border-radius: 60px;
+      border: 1px solid rgba(255,80,80,0.2);
+      color: #ff7a6b;
+      font-size: 0.9rem;
+      z-index: 2000;
+      animation: slideUp 0.3s ease, fadeOut 0.3s ease 2.5s forwards;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      font-weight: 500;
+      text-align: center;
+      max-width: 90%;
+    }
+    .toast-success {
+      border-color: rgba(106,255,140,0.2);
+      color: #6aff8c;
+    }
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    }
+
+    /* ============================================================
+       LOADING FALLBACK
+       ============================================================ */
+    .loading-fallback {
+      text-align: center;
+      padding: 3rem;
+      color: rgba(255,255,255,0.5);
+    }
+    .loading-fallback .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #6a8cff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Fallback -->
+  <div id="root">
+    <div class="wallet-card" style="text-align:center; padding:3rem;">
+      <div class="loading-fallback">
+        <div class="spinner"></div>
+        <p style="font-size:1rem; color:rgba(255,255,255,0.6);">Loading Y2K Portfolio Wallet...</p>
+        <p style="font-size:0.8rem; color:rgba(255,255,255,0.3); margin-top:0.5rem;">✦ made by Vikram</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ============================================================
+      //  🆓 SUPABASE CONFIG – Replace with YOUR keys
+      //  Get them from: supabase.com → Settings → API
+      // ============================================================
+      const SUPABASE_CONFIG = {
+        url: "https://bbrggejjhnfwlxaemkwz.supabase.co",        // e.g., "https://xxxxx.supabase.co"
+        anonKey: "sb_publishable_8TuxQpNh2KkZxKNM-ys00w_w8ye5_VI" // Your public anon key
+      };
+
+      const STORAGE_KEY = 'y2k_portfolio_items';
+
+      // Default items (shown if no data exists)
+      const defaultItems = [
+        { id: 1, icon: '📄', title: 'Resume 2026', desc: 'Full-stack · 5+ yrs', tag: 'PDF', link: '#' },
+        { id: 2, icon: '🧩', title: 'Arya Project', desc: 'AI portfolio generator', tag: 'react', link: '#' },
+        { id: 3, icon: '📱', title: 'Arya App', desc: 'Cross-platform wallet', tag: 'flutter', link: '#' },
+        { id: 4, icon: '🎥', title: 'Demo Reel', desc: 'UI/UX case studies', tag: 'video', link: '#' },
+        { id: 5, icon: '💻', title: 'CodeLab', desc: 'Open-source contributions', tag: 'github', link: '#' },
+        { id: 6, icon: '📊', title: 'Data Viz', desc: 'Interactive dashboards', tag: 'd3.js', link: '#' },
+      ];
+
+      // ---- Check Supabase config ----
+      const isSupabaseConfigured = SUPABASE_CONFIG.url !== "YOUR_SUPABASE_URL" && SUPABASE_CONFIG.anonKey !== "YOUR_SUPABASE_ANON_KEY";
+
+      // ---- Initialize Supabase ----
+      let supabase = null;
+      if (isSupabaseConfigured && typeof supabaseJs !== 'undefined') {
+        try {
+          supabase = supabaseJs.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+          console.log('✅ Supabase connected!');
+        } catch (e) {
+          console.warn('⚠️ Supabase init error:', e);
+        }
+      } else {
+        console.warn('⚠️ Supabase not configured. Using localStorage fallback.');
+      }
+
+      // ---- LocalStorage helpers ----
+      const loadFromLocal = () => {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {}
+        return null;
+      };
+
+      const saveToLocal = (items) => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        } catch (e) {}
+      };
+
+      // ---- Supabase helpers ----
+      const loadFromSupabase = async () => {
+        if (!supabase) return null;
+        try {
+          const { data, error } = await supabase
+            .from('portfolio_items')
+            .select('*')
+            .order('id', { ascending: true });
+
+          if (error) throw error;
+          if (data && data.length > 0) {
+            return data.map(item => ({
+              id: item.id,
+              icon: item.icon || '📌',
+              title: item.title || 'Untitled',
+              desc: item.description || ' ',
+              tag: item.tag || 'link',
+              link: item.link || '#'
+            }));
+          }
+        } catch (e) {
+          console.warn('Supabase load error:', e);
+        }
+        return null;
+      };
+
+      const saveToSupabase = async (items) => {
+        if (!supabase) return false;
+        try {
+          // Delete all existing rows
+          const { error: deleteError } = await supabase
+            .from('portfolio_items')
+            .delete()
+            .neq('id', 0);
+
+          if (deleteError) throw deleteError;
+
+          // Insert all items
+          const formattedItems = items.map(item => ({
+            id: item.id,
+            icon: item.icon || '📌',
+            title: item.title || 'Untitled',
+            description: item.desc || ' ',
+            tag: item.tag || 'link',
+            link: item.link || '#'
+          }));
+
+          const { error: insertError } = await supabase
+            .from('portfolio_items')
+            .insert(formattedItems);
+
+          if (insertError) throw insertError;
+          return true;
+        } catch (e) {
+          console.warn('Supabase save error:', e);
+          return false;
+        }
+      };
+
+      // ---- Check React ----
+      if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+        document.getElementById('root').innerHTML = `
+          <div class="wallet-card" style="text-align:center; padding:3rem;">
+            <div style="color: #ff7a6b; font-size: 1.2rem;">⚠️ React failed to load</div>
+            <p style="color: rgba(255,255,255,0.6);">Please check your internet connection.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const { useState, useEffect, useRef, useCallback } = React;
+
+      // ============================================================
+      //  PASSWORD CONFIG
+      // ============================================================
+      const EDIT_PASSWORD = 'Y2K Channel';
+
+      // ============================================================
+      //  PASSWORD GATE COMPONENT
+      // ============================================================
+      function PasswordGate({ onSuccess, onCancel }) {
+        const [password, setPassword] = useState('');
+        const [error, setError] = useState('');
+        const inputRef = useRef(null);
+
+        useEffect(() => inputRef.current?.focus(), []);
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (password.trim().toLowerCase() === EDIT_PASSWORD.toLowerCase()) {
+            onSuccess();
+          } else {
+            setError('✗ Incorrect password. Try again.');
+            setPassword('');
+            inputRef.current?.focus();
+          }
+        };
+
+        return React.createElement('div', { className: 'password-overlay', onClick: onCancel },
+          React.createElement('div', { className: 'password-modal', onClick: (e) => e.stopPropagation() },
+            React.createElement('h2', null, '🔐 Edit Access'),
+            React.createElement('p', null, 'Enter password to add, edit, or remove items'),
+            React.createElement('form', { onSubmit: handleSubmit },
+              React.createElement('input', {
+                ref: inputRef,
+                type: 'password',
+                placeholder: 'Enter edit password',
+                value: password,
+                onChange: (e) => setPassword(e.target.value),
+                autoComplete: 'off'
+              }),
+              React.createElement('div', { className: 'error' }, error),
+              React.createElement('div', { className: 'btn-group' },
+                React.createElement('button', { type: 'submit', className: 'btn-primary' }, 'Unlock ✦'),
+                React.createElement('button', { type: 'button', onClick: onCancel }, 'Cancel')
+              )
+            )
+          )
+        );
+      }
+
+      // ============================================================
+      //  TOAST COMPONENT
+      // ============================================================
+      function Toast({ message, type }) {
+        const className = type === 'success' ? 'toast toast-success' : 'toast';
+        return React.createElement('div', { className }, message);
+      }
+
+      // ============================================================
+      //  MAIN APP
+      // ============================================================
+      function App() {
+        const [items, setItems] = useState([]);
+        const [nextId, setNextId] = useState(1);
+        const [isAuthorized, setIsAuthorized] = useState(false);
+        const [showPasswordGate, setShowPasswordGate] = useState(false);
+        const [clickCount, setClickCount] = useState(0);
+        const [toastMessage, setToastMessage] = useState(null);
+        const [toastType, setToastType] = useState('error');
+        const [isLoading, setIsLoading] = useState(true);
+        const [syncStatus, setSyncStatus] = useState('loading');
+        const clickTimerRef = useRef(null);
+        const toastTimerRef = useRef(null);
+        const saveTimeoutRef = useRef(null);
+
+        // ---- Show toast ----
+        const showToast = (message, type = 'error') => {
+          if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+          setToastMessage(message);
+          setToastType(type);
+          toastTimerRef.current = setTimeout(() => setToastMessage(null), 3000);
+        };
+
+        // ---- Load data ----
+        const loadData = useCallback(async () => {
+          setIsLoading(true);
+          let loadedItems = null;
+
+          // Try Supabase first
+          if (isSupabaseConfigured && supabase) {
+            try {
+              const cloudData = await loadFromSupabase();
+              if (cloudData) {
+                loadedItems = cloudData;
+                setSyncStatus('synced');
+              }
+            } catch (e) {}
+          }
+
+          // Fallback to localStorage
+          if (!loadedItems) {
+            const localData = loadFromLocal();
+            if (localData) {
+              loadedItems = localData;
+              setSyncStatus('local');
+            } else {
+              loadedItems = defaultItems;
+              saveToLocal(defaultItems);
+              setSyncStatus('local');
+            }
+          }
+
+          if (loadedItems && loadedItems.length > 0) {
+            setItems(loadedItems);
+            const maxId = loadedItems.reduce((max, i) => Math.max(max, i.id || 0), 0);
+            setNextId(maxId + 1);
+          } else {
+            setItems(defaultItems);
+            setNextId(7);
+            saveToLocal(defaultItems);
+          }
+
+          setIsLoading(false);
+        }, []);
+
+        // ---- Save to cloud ----
+        const saveToCloud = useCallback(async (newItems) => {
+          if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+
+          // Always save to localStorage immediately
+          saveToLocal(newItems);
+
+          if (isSupabaseConfigured && supabase) {
+            setSyncStatus('saving...');
+            saveTimeoutRef.current = setTimeout(async () => {
+              const success = await saveToSupabase(newItems);
+              if (success) {
+                setSyncStatus('synced');
+              } else {
+                setSyncStatus('offline');
+                showToast('⚠️ Cloud save failed - data saved locally', 'error');
+              }
+            }, 500);
+          } else {
+            setSyncStatus('local');
+          }
+        }, []);
+
+        // ---- Initial load ----
+        useEffect(() => {
+          loadData();
+          return () => {};
+        }, [loadData]);
+
+        // ---- Auto-save on changes ----
+        useEffect(() => {
+          if (!isLoading && items.length > 0) {
+            saveToCloud(items);
+          }
+        }, [items, isLoading, saveToCloud]);
+
+        // ---- Hidden trigger: 6 clicks on "Y2K" ----
+        const handleNameClick = () => {
+          const newCount = clickCount + 1;
+          setClickCount(newCount);
+          if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+          clickTimerRef.current = setTimeout(() => setClickCount(0), 1500);
+          if (newCount >= 6) {
+            setClickCount(0);
+            if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+            if (isAuthorized) {
+              setIsAuthorized(false);
+              showToast('🔒 Edit mode locked', 'error');
+            } else {
+              setShowPasswordGate(true);
+            }
+          }
+        };
+
+        const handleAuthSuccess = () => {
+          setIsAuthorized(true);
+          setShowPasswordGate(false);
+          setClickCount(0);
+          showToast('🔓 Edit mode unlocked', 'success');
+        };
+
+        const handleAuthCancel = () => {
+          setShowPasswordGate(false);
+          setClickCount(0);
+        };
+
+        // ---- CRUD with auth ----
+        const checkAuth = () => {
+          if (!isAuthorized) {
+            showToast('⛔ No authority. Click "Y2K" 6 times to unlock.', 'error');
+            return false;
+          }
+          return true;
+        };
+
+        const addItem = () => {
+          if (!checkAuth()) return;
+          const type = prompt('Enter type (resume, project, video, link, image):', 'project');
+          if (!type) return;
+          const title = prompt('Title:', 'My ' + type);
+          if (!title) return;
+          const desc = prompt('Description:', '') || ' ';
+          const link = prompt('URL:', 'https://') || '#';
+          const tag = prompt('Tag:', type) || type;
+          const icon = prompt('Icon (emoji):', '📌') || '📌';
+          const newItem = { id: nextId, icon, title, desc, tag, link };
+          setItems([...items, newItem]);
+          setNextId(nextId + 1);
+          showToast('✅ Item added!', 'success');
+        };
+
+        const editItem = (id) => {
+          if (!checkAuth()) return;
+          const item = items.find(p => p.id === id);
+          if (!item) return;
+          const newTitle = prompt('Edit title:', item.title);
+          if (newTitle !== null) item.title = newTitle || item.title;
+          const newDesc = prompt('Edit description:', item.desc);
+          if (newDesc !== null) item.desc = newDesc || item.desc;
+          const newTag = prompt('Edit tag:', item.tag);
+          if (newTag !== null) item.tag = newTag || item.tag;
+          const newLink = prompt('Edit URL:', item.link === '#' ? '' : item.link);
+          if (newLink !== null) item.link = newLink || '#';
+          const newIcon = prompt('Edit icon:', item.icon);
+          if (newIcon !== null && newIcon.length > 0) item.icon = newIcon;
+          setItems([...items]);
+          showToast('✅ Item updated!', 'success');
+        };
+
+        const removeItem = (id) => {
+          if (!checkAuth()) return;
+          if (confirm('Remove this item?')) {
+            setItems(items.filter(p => p.id !== id));
+            showToast('🗑️ Item removed', 'error');
+          }
+        };
+
+        // ---- Loading state ----
+        if (isLoading) {
+          return React.createElement('div', { className: 'wallet-card', style: { textAlign: 'center', padding: '3rem' } },
+            React.createElement('div', { className: 'loading-fallback' },
+              React.createElement('div', { className: 'spinner' }),
+              React.createElement('p', { style: { fontSize: '1rem', color: 'rgba(255,255,255,0.6)' } }, 'Loading your portfolio...')
+            )
+          );
+        }
+
+        const statusText = syncStatus === 'synced' ? '☁️ synced' :
+                          syncStatus === 'saving...' ? '💾 saving...' :
+                          syncStatus === 'local' ? '💾 local' : '⚠️ offline';
+        const statusClass = syncStatus === 'synced' ? 'sync-status synced' :
+                           syncStatus === 'saving...' ? 'sync-status saving' : 'sync-status';
+
+        // ---- Render ----
+        return React.createElement(React.Fragment, null,
+          showPasswordGate && React.createElement(PasswordGate, { onSuccess: handleAuthSuccess, onCancel: handleAuthCancel }),
+          toastMessage && React.createElement(Toast, { message: toastMessage, type: toastType }),
+          React.createElement('div', { className: 'wallet-card' },
+            // HEADER
+            React.createElement('div', { className: 'header' },
+              React.createElement('div', { className: 'logo' },
+                React.createElement('h1', null,
+                  React.createElement('span', { className: 'accent' }, '✦'),
+                  React.createElement('span', { className: 'click-target', onClick: handleNameClick, title: 'Click 6 times to unlock edit mode' }, 'Y2K'),
+                  React.createElement('span', { className: 'dot' }, '·'),
+                  React.createElement('span', { className: 'wallet-text' }, 'wallet'),
+                  isAuthorized && React.createElement('span', { className: 'edit-indicator' }, '✎ edit'),
+                  React.createElement('span', { className: statusClass }, statusText)
+                ),
+                React.createElement('small', null, 'store · resume · projects · links · cloud-synced')
+              ),
+              React.createElement('div', { className: 'stats' },
+                React.createElement('strong', null, items.length),
+                ' items'
+              )
+            ),
+            // SEO hidden
+            React.createElement('div', { style: { height: 0, overflow: 'hidden', position: 'absolute', width: 0 }, 'aria-hidden': 'true' },
+              React.createElement('h2', null, 'Y2K Portfolio Wallet – showcase resumes, coding projects, apps, videos & links'),
+              React.createElement('p', null, 'Designed by Vikram. Dark glassy, cloud-synced with Supabase.')
+            ),
+            // PORTFOLIO GRID
+            React.createElement('div', { className: 'portfolio-grid' },
+              items.map((item) =>
+                React.createElement('div', { key: item.id, className: 'card' },
+                  React.createElement('div', { className: 'card-icon' }, item.icon),
+                  React.createElement('div', { className: 'card-title' }, item.title),
+                  React.createElement('div', { className: 'card-desc' }, item.desc),
+                  React.createElement('span', { className: 'card-tag' }, item.tag),
+                  React.createElement('div', { className: 'card-actions' },
+                    React.createElement('button', { className: 'edit-btn', onClick: () => editItem(item.id) }, '✎ edit'),
+                    React.createElement('button', { className: 'remove-btn', onClick: () => removeItem(item.id) }, '✕ remove')
+                  ),
+                  item.link && item.link !== '#' ?
+                    React.createElement('a', { href: item.link, target: '_blank', className: 'card-link' }, '↗ open') :
+                    React.createElement('span', { className: 'card-link', style: { opacity: 0.4, cursor: 'default' } }, '↗ no link')
+                )
+              ),
+              // Add Card
+              React.createElement('div', { className: 'card add-card', onClick: addItem },
+                React.createElement('div', { className: 'card-icon' }, '＋'),
+                React.createElement('div', { className: 'card-title' }, 'Add new'),
+                React.createElement('div', { className: 'card-desc' }, 'resume, project, video…'),
+                React.createElement('span', { className: 'card-tag', style: { background: 'transparent', borderColor: 'transparent' } }, '➕')
+              )
+            ),
+            // FOOTER
+            React.createElement('div', { className: 'footer' },
+              React.createElement('div', null,
+                React.createElement('strong', null, '✦ made by Vikram'),
+                ' · ',
+                React.createElement('a', { href: '#', onClick: (e) => { e.preventDefault(); alert('Y2K Portfolio Wallet · dark glassy & cloud-synced'); } }, 'about')
+              ),
+              React.createElement('div', { style: { display: 'flex', gap: '0.6rem' } },
+                React.createElement('a', { href: '#', onClick: (e) => { e.preventDefault(); alert('📁 store any resume / project / link'); } }, 'portfolio'),
+                React.createElement('a', { href: '#', onClick: (e) => { e.preventDefault(); alert('🔐 Click "Y2K" 6 times to unlock'); } }, 'security')
+              )
+            )
+          )
+        );
+      }
+
+      // ============================================================
+      //  MOUNT REACT
+      // ============================================================
+      const rootElement = document.getElementById('root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(React.createElement(App));
+
+      console.log('🚀 Y2K Portfolio Wallet · made by Vikram · Supabase + React');
+    })();
+  </script>
+
+  <!-- Hidden SEO -->
+  <div style="display:none;" aria-hidden="true">
+    <p>Y2K portfolio wallet – store resumes, coding projects, Arya app, videos, links. Dark glassy UI. Made by Vikram.</p>
+  </div>
+</body>
+</html>
