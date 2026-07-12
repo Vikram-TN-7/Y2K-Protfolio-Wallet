@@ -530,10 +530,14 @@
       const isSupabaseConfigured = SUPABASE_CONFIG.url !== "YOUR_SUPABASE_URL" && SUPABASE_CONFIG.anonKey !== "YOUR_SUPABASE_ANON_KEY";
 
       // ---- Initialize Supabase ----
+      // (grab the library reference BEFORE declaring our own local "supabase"
+      // variable below, otherwise it shadows window.supabase and cloud sync
+      // silently never runs)
+      const supabaseLib = window.supabase;
       let supabase = null;
-      if (isSupabaseConfigured && typeof supabaseJs !== 'undefined') {
+      if (isSupabaseConfigured && typeof supabaseLib !== 'undefined') {
         try {
-          supabase = supabaseJs.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+          supabase = supabaseLib.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
           console.log('✅ Supabase connected!');
         } catch (e) {
           console.warn('⚠️ Supabase init error:', e);
